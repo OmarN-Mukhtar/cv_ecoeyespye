@@ -25,22 +25,35 @@ CONFIG = {
     'learning_rate': 1e-4,
     'weight_decay': 1e-5,
     'train_split': 0.8,
+    'test_split': 0.1,   # fraction for test set
     'num_classes': 21
 }
 
-# Dataset and DataLoader
+# Dataset
 full_dataset = SegmentationDataset(
     '/Users/omar/Downloads/segmentation_datasets/patches', 
     '/Users/omar/Downloads/segmentation_datasets/mask'
 )
 
-# Split dataset
-train_size = int(CONFIG['train_split'] * len(full_dataset))
-val_size = len(full_dataset) - train_size
-train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+# Split dataset into train / val / test
+num_samples = len(full_dataset)
+train_frac = CONFIG['train_split']
+test_frac = CONFIG['test_split']
+val_frac = 1.0 - train_frac - test_frac
 
+train_size = int(train_frac * num_samples)
+val_size = int(val_frac * num_samples)
+test_size = num_samples - train_size - val_size  
+
+generator = torch.Generator().manual_seed(42)
+train_dataset, val_dataset, test_dataset = random_split(
+    full_dataset, [train_size, val_size, test_size], generator=generator
+)
+
+# DataLoaders
 train_loader = DataLoader(train_dataset, batch_size=CONFIG['batch_size'], shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=CONFIG['batch_size'], shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=CONFIG['batch_size'], shuffle=False)
 
 print(f"Train samples: {len(train_dataset)}, Val samples: {len(val_dataset)}")
 
