@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from iou import calculate_iou
 
-def validate_epoch(model, dataloader, criterion, device, num_classes, logger=None):
+def validate_epoch(model, dataloader, criterion, device, num_classes, logger=None, unique_categories=None):
     model.eval()
     running_loss = 0.0
     correct_pixels = 0

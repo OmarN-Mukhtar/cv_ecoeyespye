@@ -237,13 +237,15 @@ def main():
     images_dir = os.path.join(base_dir, 'segmentation_datasets', 'patches')
     masks_dir = os.path.join(base_dir, 'segmentation_datasets', 'mask')
     
-    category_ids, image_names = load_category_ids(base_dir)
+    # Hard-coded label mapping
+    sparse_to_dense = {0: 0, 1: 1, 2: 2, 3: 3, 6: 4, 7: 5, 16: 6, 17: 7, 18: 8, 20: 9}
+    num_classes = len(sparse_to_dense)
     
-    unique_categories = sorted(np.unique(category_ids))
-    num_classes = len(unique_categories)
-    sparse_to_dense = {cat_id: idx for idx, cat_id in enumerate(unique_categories)}
+    category_ids, image_names = load_category_ids(base_dir)
+    unique_categories = sorted(sparse_to_dense.keys())
     
     logger.log(f"Loaded {len(category_ids)} images, {num_classes} categories")
+    logger.log(f"sparse_to_dense mapping: {sparse_to_dense}")
     
     # Configuration
     config = {

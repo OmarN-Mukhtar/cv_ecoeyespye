@@ -12,6 +12,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from iou import calculate_iou
 
+# Hard-coded label mapping
+sparse_to_dense = {0: 0, 1: 1, 2: 2, 3: 3, 6: 4, 7: 5, 16: 6, 17: 7, 18: 8, 20: 9}
+dense_to_sparse = {v: k for k, v in sparse_to_dense.items()}
+
 def test_and_save_predictions(model, test_loader, criterion, device, CONFIG, output_dir, logger=None, unique_categories=None):
     """Test model and save predictions with overlays and category IDs"""
     model.eval()
@@ -21,8 +25,8 @@ def test_and_save_predictions(model, test_loader, criterion, device, CONFIG, out
     all_preds = []
     all_targets = []
     
-    # Create mapping from dense indices to category IDs
-    dense_to_category = {idx: cat_id for idx, cat_id in enumerate(unique_categories)} if unique_categories else None
+    # Use hard-coded mapping instead of dynamic one
+    dense_to_category = dense_to_sparse
     
     # Define colors for categories
     np.random.seed(42)
@@ -153,7 +157,7 @@ def test_and_save_predictions(model, test_loader, criterion, device, CONFIG, out
         all_targets = torch.cat(all_targets, dim=0)
         
         # Compute test metrics
-        iou_result, per_class_iou = calculate_iou(all_preds, all_targets, CONFIG['num_classes'])
+        iou_result, per_class_iou = calculate_iou(all_preds, all_targets, CONFIG['num_classes'], return_per_class=True)
         
         avg_loss = total_loss / len(test_loader)
         accuracy = correct_pixels / total_pixels
@@ -168,9 +172,9 @@ def test_and_save_predictions(model, test_loader, criterion, device, CONFIG, out
             
             if unique_categories is not None:
                 logger.log(f"\nPer-category IoU:")
-                for idx, cat_id in enumerate(unique_categories):
-                    if not np.isnan(per_class_iou[idx]):
-                        logger.log(f"  Category {cat_id}: {per_class_iou[idx]:.4f}")
+                for dense_idx, sparse_cat in dense_to_sparse.items():
+                    if not np.isnan(per_class_iou[dense_idx]):
+                        logger.log(f"  Category {sparse_cat} (dense {dense_idx}): {per_class_iou[dense_idx]:.4f}")
             
             logger.log(f"\nPredictions saved to: {predictions_dir}")
             logger.log(f"{'='*50}\n")

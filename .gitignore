@@ -1,0 +1,5 @@
+# Data files to exclude
+segmentation_datasets/
+data.json
+*.pth
+*.DS_Store

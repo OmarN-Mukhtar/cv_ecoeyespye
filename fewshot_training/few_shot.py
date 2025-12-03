@@ -251,7 +251,7 @@ def main():
     SAM_CHECKPOINT = '/home/3182217/segmentation_cv/EcoEyeSpy/fewshot_training/sam_vit_b_01ec64.pth'
     MODEL_TYPE = 'vit_b'
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-    NUM_TRAIN_EXAMPLES = 100
+    NUM_TRAIN_EXAMPLES = 64
     
     # Create timestamped output directory in fewshot_training
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -299,8 +299,13 @@ def main():
     metrics_summary = {
         'total': len(test_data),
         'ious': [],
+        'dices': [],
         'precisions': [],
-        'recalls': []
+        'recalls': [],
+        'f1_scores': [],
+        'boundary_ious': [],
+        'hausdorff_distances': [],
+        'boundary_maes': []
     }
     
     print("\nProcessing test images...")
@@ -339,15 +344,25 @@ def main():
                 'bbox': item['bbox'],
                 'sam_score': float(best_score),
                 'iou': metrics['iou'],
+                'dice': metrics['dice'],
                 'precision': metrics['precision'],
-                'recall': metrics['recall']
+                'recall': metrics['recall'],
+                'f1_score': metrics['f1_score'],
+                'boundary_iou': metrics['boundary_iou'],           # ✅ Now saved
+                'hausdorff_distance': metrics['hausdorff_distance'], # ✅ Now saved
+                'boundary_mae': metrics['boundary_mae']            # ✅ Now saved
             }
             results.append(result)
             
             # Update metrics summary
             metrics_summary['ious'].append(metrics['iou'])
+            metrics_summary['dices'].append(metrics['dice'])
             metrics_summary['precisions'].append(metrics['precision'])
             metrics_summary['recalls'].append(metrics['recall'])
+            metrics_summary['f1_scores'].append(metrics['f1_score'])
+            metrics_summary['boundary_ious'].append(metrics['boundary_iou'])
+            metrics_summary['hausdorff_distances'].append(metrics['hausdorff_distance'])
+            metrics_summary['boundary_maes'].append(metrics['boundary_mae'])
             
             # Save predicted mask
             mask_save_path = os.path.join(OUTPUT_DIR, 'masks', item['file_name'])
@@ -379,8 +394,13 @@ def main():
     
     # Calculate average metrics
     avg_iou = np.mean(metrics_summary['ious'])
+    avg_dice = np.mean(metrics_summary['dices'])
     avg_precision = np.mean(metrics_summary['precisions'])
     avg_recall = np.mean(metrics_summary['recalls'])
+    avg_f1 = np.mean(metrics_summary['f1_scores'])
+    avg_boundary_iou = np.mean(metrics_summary['boundary_ious'])
+    avg_hausdorff = np.mean(metrics_summary['hausdorff_distances'])
+    avg_boundary_mae = np.mean(metrics_summary['boundary_maes'])
     std_iou = np.std(metrics_summary['ious'])
     
     # Print summary
@@ -389,8 +409,13 @@ def main():
     print("="*60)
     print(f"Total images processed: {len(results)}")
     print(f"\nAverage IoU: {avg_iou:.4f} (±{std_iou:.4f})")
+    print(f"Average Dice: {avg_dice:.4f}")
     print(f"Average Precision: {avg_precision:.4f}")
     print(f"Average Recall: {avg_recall:.4f}")
+    print(f"Average F1-Score: {avg_f1:.4f}")
+    print(f"\nAverage Boundary IoU: {avg_boundary_iou:.4f}")
+    print(f"Average Hausdorff Distance: {avg_hausdorff:.4f}")
+    print(f"Average Boundary MAE: {avg_boundary_mae:.4f}")
     print(f"\nMedian IoU: {np.median(metrics_summary['ious']):.4f}")
     print(f"Min IoU: {np.min(metrics_summary['ious']):.4f}")
     print(f"Max IoU: {np.max(metrics_summary['ious']):.4f}")
@@ -402,9 +427,14 @@ def main():
             'summary': {
                 'total_images': len(results),
                 'avg_iou': avg_iou,
-                'std_iou': std_iou,
+                'avg_dice': avg_dice,
                 'avg_precision': avg_precision,
                 'avg_recall': avg_recall,
+                'avg_f1_score': avg_f1,
+                'avg_boundary_iou': avg_boundary_iou,
+                'avg_hausdorff_distance': avg_hausdorff,
+                'avg_boundary_mae': avg_boundary_mae,
+                'std_iou': std_iou,
                 'median_iou': float(np.median(metrics_summary['ious'])),
                 'min_iou': float(np.min(metrics_summary['ious'])),
                 'max_iou': float(np.max(metrics_summary['ious']))

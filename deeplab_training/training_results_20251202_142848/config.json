@@ -1,0 +1,28 @@
+{
+  "num_epochs": 50,
+  "batch_size": 8,
+  "learning_rate": 0.0001,
+  "weight_decay": 1e-05,
+  "train_split": 0.8,
+  "test_split": 0.1,
+  "num_classes": 10,
+  "device": "cuda",
+  "timestamp": "20251202_142848",
+  "atrous_rates": [
+    6,
+    12,
+    18
+  ],
+  "unique_categories": [
+    0,
+    1,
+    2,
+    3,
+    6,
+    7,
+    16,
+    17,
+    18,
+    20
+  ]
+}
